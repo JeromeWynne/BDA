@@ -17,12 +17,22 @@
 # The time between arrivals at the clinic is Exponentially distributed.
 # We'll start with the number of patients that arrive at the clinic between 9 and 4.
 
-# Run this as a Poisson process, with an expectation of 42 patients over the day.
-patients_admitted <- rpois(n = 1, lambda = 42)
+# Run this as an Exponential process, with an expected arrival time of 10 minutes
+arrival_intervals <- rexp(n = 84, rate = 0.1)
+arrival_intervals <- arrival_intervals[(cumsum(arrival_intervals) < 420)]
+arrival_times <- cumsum(arrival_intervals)
+n_patients <- length(arrival_intervals)
 
 # Now we generate 42 visit lengths according to a Uniform distribution
-visit_lengths <- runif(n = patients_admitted, min = 5, max = 20)
+appt_lengths <- runif(n = n_patients, min = 5, max = 20)
 
-# A patient must wait if all doctors are occupied. The doctors are occupied if
-# there are at least three patients in the clinic at once. We need to know the
-# times at which the patients arrive!
+# Start with one doctor
+appt_end <- 0
+wait_lengths <- matrix(0, nrow = n_patients, ncol = 1)
+for (j in seq(n_patients)) {
+  wait_lengths[j] <- max(arrival_times[j] - appt_end, 0)
+  t_seen <- arrival_times[j] + wait_lengths[j]
+  appt_end <- t_seen + appt_lengths[j]
+}
+
+
