@@ -45,3 +45,13 @@ plot(x, dbeta(x = x, shape1 = a, shape2 = b), type='l',
      main = paste(
        'Beta(a =', a, ', b = ', b, ')'), ylab = 'p(x)')
 dev.off()
+
+
+# Binomial
+a <- 10 # n
+b <- 10 - 3 # n - k
+png('Beta_Binomial.png')
+plot(x, dbeta(x = x, shape1 = a, shape2 = b), type='l',
+     main = paste(
+       'Beta(a =', a, ', b = ', b, ')'), ylab = 'p(x)')
+dev.off()
