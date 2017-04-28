@@ -16,3 +16,8 @@ legend('topright',
        legend = c('Binomial w/ n = 1000, p = 1/6', 'Normal approximation'),
        lty = c(1, 2), col = c('red', 'blue'))
 title('Normal approximation to the Binomial distribution')
+
+
+query_q <- c(5, 25, 50, 75)
+print(rbind(query_q, 
+            pnorm(q = query_q, mean = n_trials*p, sd = n_trials*p*(1 - p))))
