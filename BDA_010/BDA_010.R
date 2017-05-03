@@ -16,8 +16,9 @@
 alpha <- 2
 beta <- 5
 n_pts <- 5000
-th <- seq(0, 1, length.out = n_pts)
+th <- seq(0, 0.5, length.out = n_pts)
 prior_pd <- dgamma(x = th, shape = alpha, rate = beta)
+plot(th, prior_pd, type = 'l')
 
 # Sampling distribution was Exponential
 # Example of an Exponentially distributed parameter: times between
@@ -29,8 +30,8 @@ sampling_pd <- sapply(X = th, FUN = function(theta) exp(-100*theta))
 
 # Posterior distribution
 unnorm_posterior_pd <- sampling_pd*prior_pd # Probability of each theta value given observation
-posterior_pd <- unnorm_posterior_pd/sum(unnorm_posterior_pd*1/n_pts)
-
+posterior_pd <- unnorm_posterior_pd/sum(unnorm_posterior_pd*max(th)/n_pts)
+posterior_exp <- sum(posterior_pd*th)
 
 # Plot it
 png('Analytic_vs_computational_posterior.png')
@@ -39,7 +40,16 @@ plot(th, posterior_pd, type = 'l', lwd = 2,
      main = 'Posterior distribution of parameter')
 lines(th, dgamma(x = th, shape = alpha, rate = beta + 100),
      col = 'red', type = 'l', lty = 3, lwd = 2)
-
-legend('topright', legend = c('Computational solution', 'Analytic solution'),
-       col = c('red', 'black'), lty = c(1, 3))
+lines(th, dgamma(x = th, shape = alpha + 1, rate = beta + 100),
+      col = 'blue', type = 'l', lty = 3, lwd = 2)
+legend('topright',
+       legend = c('Computational solution',
+                  'Analytic solution, y >= 100',
+                  'Analytic solution, y = 100'),
+       col = c('black', 'red', 'blue'), lty = c(1, 3, 3))
 dev.off()
+
+# Why is the posterior variance of theta higher when y = 100
+# than when y >= 100? 
+# 
+#
