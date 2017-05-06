@@ -1,0 +1,28 @@
+---
+title: "BDA 15: Multiparameter Models"
+output: pdf_document
+---
+
+Often we'll have to deal with models containing multiple unknowns. It's usually the case that within these models we're only interested in the posterior distribution of one parameter, which we call the marginal posterior distribution of that parameter.
+\par
+To obtain the marginal posterior it's first necessary to model the joint posterior distribution over all unknowns. We can then integrate over the other unknowns to get the desired marginal posterior.
+\par
+The computational equivalent of this procedure is to draw many samples from the joint posterior, and record the parameter of interest each time. In doing this, it's possible to build up a frequency distribution that approximates the marginal posterior of the parameter.
+\par
+Consider the case where we seek to model the joint distribution of two parameters. We can get hold of the unnormalized posterior by taking the product of the joint prior and the sampling distribution:
+\[
+  p(\theta_1, \theta_2 | y) \ \propto \ p(y|\theta_1, \theta_2)\cdot p(\theta_1, \theta_2)
+\]
+Let's say we want the marginal posterior of $\theta_1$, $p(\theta_1|y)$. We can get this by integrating the joint posterior over $\theta_2$
+\[
+  p(\theta_1|y) \ = \ \int p(\theta_1, \theta_2 | y)\cdot d\theta_2
+\]
+We can re-express the right hand side in terms of a conditional posterior and another marginal posterior
+\[
+  p(\theta_1 | y) \ = \ \int p(\theta_1 | \theta_2, y) \cdot p(\theta_2|y) \cdot d\theta_2
+\]
+I think this form makes it clearer what we're doing - we're taking the weighted sum of \theta_1's posterior densities condtional on $\theta_2$, where the weights correspond to the posterior probabilities of the relevant value of $\theta_2$.
+
+```{r}
+plot(cars
+```
