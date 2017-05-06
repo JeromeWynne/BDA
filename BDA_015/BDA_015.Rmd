@@ -55,3 +55,29 @@ This prior is appropriate when the d.o.f. of the data dwarfs the d.o.f. of the u
 \begin{equation}
  p(\sigma^2 | y) \propto (\sigma^2)^{-\frac{n+1}{2}} \cdot \exp{\Big(-\frac{(n - 1)s^2}{2\sigma^2} \Big)}
 \end{equation}
+This has the form of an inverse gamma function (i.e. $\frac{1}{\sigma^2} \sim \text{Gamma(a, b)}$). 
+\par
+Finally we're in a position where can do some modelling. To reiterate, the process we're going to follow is:
+
+1. Sample $\sigma^2$ from $p(\sigma^2|y)$.
+
+2. Use these values of $\sigma^2$ to draw samples of $\mu$ from $p(\mu | \sigma^2, y)$.
+
+3. Chart the frequency of the $\mu$ values in a histogram. This distribution will be representative of the marginal posterior $p(\mu | y)$.
+
+Before we do anything however, we'll need some data to work with. We'll use ten data points drawn from a Normal distribution with a true mean of 50 and a true variance of 10.
+
+```{r}
+  n <- 10
+  obs_y <- rnorm(n = n, mean = 50, sd = sqrt(10))
+  sample_var <- sum((obs_y - mean(obs_y))^2)/(n-1)
+```
+
+Next we'll execute step (1) - drawing samples of $\sigma^2$ from $p(sigma^2 | y)$. 
+INVERSE CHI-SQUARE DISTRIBUTION - GENERATE CHI-SQUARE RVs TO GET THESE
+HOW CAN WE WRITE (13) AS AN INVERSE CHI-SQUARE (OR BETTER STILL INVERSE GAMMA) DISTRIBUTION?
+```{r}
+  function rposterior_var(n, n_obs, sample_var) {
+      
+  }
+```
