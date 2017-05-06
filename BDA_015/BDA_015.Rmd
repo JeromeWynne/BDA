@@ -10,19 +10,48 @@ To obtain the marginal posterior it's first necessary to model the joint posteri
 The computational equivalent of this procedure is to draw many samples from the joint posterior, and record the parameter of interest each time. In doing this, it's possible to build up a frequency distribution that approximates the marginal posterior of the parameter.
 \par
 Consider the case where we seek to model the joint distribution of two parameters. We can get hold of the unnormalized posterior by taking the product of the joint prior and the sampling distribution:
-\[
+\begin{equation}
   p(\theta_1, \theta_2 | y) \ \propto \ p(y|\theta_1, \theta_2)\cdot p(\theta_1, \theta_2)
-\]
+\end{equation}
 Let's say we want the marginal posterior of $\theta_1$, $p(\theta_1|y)$. We can get this by integrating the joint posterior over $\theta_2$
-\[
+\begin{equation}
   p(\theta_1|y) \ = \ \int p(\theta_1, \theta_2 | y)\cdot d\theta_2
-\]
+\end{equation}
 We can re-express the right hand side in terms of a conditional posterior and another marginal posterior
-\[
+\begin{equation}
   p(\theta_1 | y) \ = \ \int p(\theta_1 | \theta_2, y) \cdot p(\theta_2|y) \cdot d\theta_2
-\]
-I think this form makes it clearer what we're doing - we're taking the weighted sum of \theta_1's posterior densities condtional on $\theta_2$, where the weights correspond to the posterior probabilities of the relevant value of $\theta_2$.
-
-```{r}
-plot(cars
-```
+\end{equation}
+I think this form makes it clearer what we're doing - we're taking the weighted sum of $\theta_1$'s posterior densities condtional on $\theta_2$, where the weights correspond to the posterior probabilities of the relevant value of $\theta_2$.
+\par
+Factoring the marginal posterior in this way also reveals a possible way to simulate it. We can first model the posterior distribution of $\theta_2$, draw a sample $\theta_2$, then use this to evaluate $p(\theta_1 | \theta_2, y)$ from which we can draw a value of $\theta_1$. If we repeat this process many times, the resulting distribution will be similar to $p(\theta_1 | y)$
+\par
+Now for an example. Say we're trying to model the mean $\mu$ of a Normally distributed random variable $Y$ for which we don't know the variance. $\sigma^2$. We can formulate the marginal posterior as
+\begin{equation}
+  p(\mu|y) = \int p(\mu | \sigma^2, y)\cdot p(\sigma^2 | y)\cdot d\sigma^2
+\end{equation}
+So if we're to follow the procedure outlined above in which we sample from $p(\sigma^2 |y)$, then from $p(\mu | \sigma^2, y)$, we'll need expressions for both of these terms. $p(\mu | \sigma^2, y)$ is quite straightforward:
+\begin{align}
+  p(\mu | \sigma^2, y) &\propto p(y | \mu, \sigma^2)\cdot p(\mu | \sigma^2) \\
+  p(\mu | \sigma^2, y) &\propto \prod_{i = 1}^n \frac{1}{\sigma} \exp\Big({-\frac{(y^{(i)} - \mu)^2}{2\sigma^2}}\Big)
+\end{align}
+We assume that the location and scale are independent so that $p(\mu|\sigma^2) = p(\mu) = \text{Unif}(-\infty, \infty) = \texttt{constant}$. We also assume that the observations are independent.
+\par
+$p(\sigma^2 | y)$ is a little more tricky to derive. Again we use the fact that
+\begin{equation}
+  p(\sigma^2 | y) \propto p(y|\sigma^2) \cdot p(\sigma^2)
+\end{equation}
+For $p(y|\sigma^2)$ we can integrate $p(y|\sigma^2, \mu)$ over $\mu$
+\begin{align}
+  p(y|\sigma^2) &= \int \prod_{i = 1}^n \frac{1}{\sqrt{2\pi}\sigma}\exp{\Big( -\frac{(y^{(i)} - \mu)^2}{2\sigma^2} \Big)}d\mu \\
+  &= \frac{1}{(2\pi\sigma^2)^{n/2}} \cdot \exp{\Big(-\frac{(n - 1)s^2}{2\sigma^2} \Big)} \cdot \int \exp{\Big(-\frac{n(\bar{y} - \mu)^2}{2\sigma^2}\Big)}d\mu  \\
+    &= \frac{1}{(2\pi\sigma^2)^{n/2}} \cdot \exp{\Big(-\frac{(n - 1)s^2}{2\sigma^2} \Big)} \cdot \sqrt{2\pi}\frac{\sigma}{\sqrt{n}} \\
+    &= \frac{1}{\sqrt{n}\cdot(2\pi\sigma^2)^{\frac{n-1}{2}}} \cdot \exp{\Big(-\frac{(n - 1)s^2}{2\sigma^2} \Big)}
+\end{align}
+To derive this we made use of the fact that the integral in (9) is Normal and that the sample variance of our observations is $s^2 = \frac{1}{n - 1}\sum_{i = 1}^n(y^{(i)} - \bar{y})$. We can take a noninformative prior on $\sigma^2$ so that 
+\begin{equation}
+  p(\sigma^2) \propto (\sigma^2)^{-1}
+\end{equation} 
+This prior is appropriate when the d.o.f. of the data dwarfs the d.o.f. of the usual conjugate prior. Using (12) and (11) we can now express (7):
+\begin{equation}
+ p(\sigma^2 | y) \propto (\sigma^2)^{-\frac{n+1}{2}} \cdot \exp{\Big(-\frac{(n - 1)s^2}{2\sigma^2} \Big)}
+\end{equation}
