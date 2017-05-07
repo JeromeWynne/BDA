@@ -77,11 +77,7 @@ Before we do anything however, we'll need some data to work with. We'll use thir
 Next we'll execute step (1) - drawing samples of $\sigma^2$ from $p(\sigma^2 | y)$.
 ```{r}
   sample_sigma_sq <- function(n_samples, n_obs, sample_var) {
-                        sigma_sq <- seq(0.01, 100, 0.1)
-                        pd <- (sigma_sq^(-(n_obs+1)/2))*exp(-sample_var*(n_obs - 1)/
-                                                                        (2*sigma_sq))
-                        samples <- sample(x = sigma_sq, size = n_samples,
-                                          replace = TRUE, prob = pd)
+                        samples <- sample_var*(n_obs - 1)/rchisq(n = n_samples, df = n_obs - 1)
                         return(samples)
   }
 
@@ -100,20 +96,6 @@ var_samples <- sample_sigma_sq(n_samples, n_obs, sample_var)
 ```
 We can plug these values of $\sigma^2$ into the expression for the conditional posterior distribution of $\mu$, then draw samples according to the resulting probability densities.
 ```{r}
-  sampling_pd <- function(obs_y, var, mu) {
-                        # Returns sampling probability density of observations under 
-                        # possible mu values
-                        # obs_y:  Vector of observations that are thought to be 
-                        #         distributed Normally
-                        # var:    Variance hyperparameter value
-                        # mu:     Vector of mu values over which to compute p(mu|y, var)
-                        sample_p <- sapply(obs_y, FUN = function(y) exp(-((y-mu)^2)/(2*var))/sqrt(var))
-                        agg_sample_p <- apply(sample_p, MARGIN = 1,
-                                               FUN = function (sample) prod(sample))
-                        agg_sample_p <- agg_sample_p/sum(agg_sample_p*(max(mu) - min(mu))/length(mu))
-                        return(agg_sample_p)
-                        } 
-
 sample_mu <- function(n_samples, obs_y, var_list) {
                         # Retrieves mu values from the conditional posterior of mu
                         # n_samples: Scalar number of samples to take from conditional
@@ -122,38 +104,26 @@ sample_mu <- function(n_samples, obs_y, var_list) {
                         #            distributed Normally
                         # var_list:  Vector of variance samples from the marginal
                         #            posterior of sigma^2
-                        mu <- seq(20, 80, 0.05)
-                        sampled_mu <- matrix(0, nrow = length(var_list), ncol = 1)
-                        i <- 1
+                        sampled_mu <- c()
                         for (var in var_list) {
                           # Compute p.d. of mu|y, sigma^2, then sample from it
-                          cond_post_pd <- sampling_pd(obs_y, var, mu)
-                          sampled_mu[i] <- sample(mu, size = n_samples, replace = TRUE,
-                                                  prob = cond_post_pd)
-                          i <- i + 1
+                          sampled_mu <- c(sampled_mu, rnorm(n = n_samples,
+                                                            mean = mean(obs_y),
+                                                            sd = sqrt(var/n_obs)))
                         }
                         return(sampled_mu)
 }
-
-# Check that the conditional posterior of mu is correct
-# we'd expect it to be N(sample_mean, sigma_sq/n)
-x <- seq(20, 80, 0.05)
-approx_pd <- sampling_pd(obs_y, var = 20, mu = x)
-true_pd <- dnorm(x, mean = mean(obs_y), sd = sqrt(20/n_obs))
-{plot(x, approx_pd, main = 'Comparison of computed conditional posterior against analytical',
-      xlim = c(40, 60))
-lines(x, true_pd, col = 'blue')}
 ```
 Having verified that the marginal distribution of the variance is scaled inverse Chi-Square and that the conditional posterior of the mean is Normal, we can now estimate the marginal posterior density of the mean. All being well, it should follow a t-distribution with $n-1$ degrees of freedom.
 ```{r}
-mu_samples <- sample_mu(1, obs_y, var_samples)
-h <- hist(mu_samples, breaks = seq(20, 80, 0.05), plot = FALSE)
-{plot(h$breaks[-1], h$density,
-     xlab = expression(paste(mu, ' value')),
-     ylab = 'Probability density',
-     main = 'Marginal Posterior Probability Density over Observation Mean',
-     xlim = c(45, 55))
-lines(seq(20, 80, 0.05), dt(x = (seq(20, 80, 0.05) - 
-                                   mean(obs_y))/sqrt(sample_var/n_obs),
-                            df = n_obs - 1), type = 'l')}
+mu_samples <- sample_mu(5, obs_y, var_samples)
+{hist(mu_samples, breaks = 100, probability = TRUE,
+       xlab = expression(paste(mu, ' value')),
+       ylab = 'Probability density',
+       main = 'Marginal Posterior Probability Density over Observation Mean',
+       xlim = c(45, 55))
+lines(seq(20, 80, 0.05), dt(x = (seq(20, 80, 0.05)-mean(obs_y))/sqrt(sample_var/n_obs), df = n_obs - 1), type = 'l')
+lines(seq(20, 80, 0.05), dnorm(x = seq(20, 80, 0.05), mean = mean(obs_y), sd = sqrt(sample_var/n_obs)), type = 'l', col = 'red')}
+##  THIS IS WRONG ^ SOMETHING IS GOING AWRY WHEN SAMPLING FROM THE CONDITIONAL POSTERIOR
 ```
+
