@@ -1,0 +1,52 @@
+---
+title: "BDA_017: Sample Moments"
+output: html_notebook
+---
+
+The sampling distribution of a random variable describes the distribution of our observations of that random variable. The population distribution describe the distribution of the random variable itself. We can characterize either of them using traditional measures of a distribution's shape such as the mean and variance.
+
+The $k$th sample moment of a random variable is defined as the frequency-weighted average of our observations to the $k$th power.
+
+\begin{equation}
+  M_k = \frac{1}{n}\sum_{i = 1}^n X_i^k
+\end{equation}
+
+Sample moments are unbiased estimates of the population distribution's moments. This means that the expected value of a sample moment is equal to its corresponding moment for the population distribution.
+
+To emphasize the distinction between the population and sample distributions, let's generate some data and compare the two.
+
+The observations are drawn from the population distribution: for this example, we'll define this as a Normal distribution with mean $\mu = 10$ and variance $\sigma^2 = 5$. The underlying random variable for the observations is denoted $X$.
+\[
+  X \sim N(10, 5) = \texttt{Population distribution}
+\]
+We make 10 draws from this distribution to form a sample consisting of 10 observations $\{x_1, ..., x_{10}\}$
+```{r}
+  n_observations <- 10
+  pop_mean <- 10
+  pop_var <- 5
+  sample <- rnorm(n = n_observations, mean = pop_mean, sd = sqrt(pop_var))
+```
+Using our sample we can compute the sample mean:
+\[
+  \bar{x} = M_1 = \frac{1}{10}\sum_{i = 1}^{10} x_i \\
+\]
+And the second sample moment
+\[
+  M_2 = \frac{1}{10}\sum_{i = 1}^{10}n x_i^2
+\]
+We can use these sample moments to estimate the population variance - this estimate is called the sample variance.
+\begin{align}
+  \texttt{Population variance} &= \text{Var}X = E[X^2] - E[X]^2 \\
+  E[X^2] &\approx M_2 = \frac{1}{10}\sum_{i = 1}^{10}n x_i^2 \\
+  E[X] &\approx M_1 = \bar{x}
+\end{align}
+The approximation is justified by the fact that, on average, the sample distribution's moments will be equal to the population distribution's moments. Hopefully the above makes it clear that the sample variance is an approximation to the population variance.
+```{r}
+sample_mean <- mean(sample)
+second_sample_moment <- mean(sample^2)
+sample_var <- second_sample_moment - sample_mean^2
+sample_var_2 <- sum((sample - sample_mean)^2)/(n_observations - 1)
+```
+
+Let's compare the population and sample distributions. We now assume that the sample has been drawn from a Normal distribution, such that the sample distribution
+  
