@@ -1,0 +1,26 @@
+---
+title: "BDA_018: Meeting for Lunch"
+output: html_notebook
+---
+
+I'm meeting a friend for lunch sometime between noon and 1pm. We each arrive independently, with all times uniformly probable, within this timeframe, but will only wait for 15 minutes for each other before we give up and leave. What's the probability we will have lunch together?
+
+First, we'll solve this by simulation. Let $A$ be an r.v. for the time I arrive and $B$ be for the time my friend arrives.
+
+```{r}
+n_sim <- 10000
+A <- runif(n = n_sim)
+B <- runif(n = n_sim)
+successful_lunch <- abs(A - B) < 0.25
+{plot(A, B, col = ifelse(successful_lunch, 'green', 'red'),
+     main = '')
+legend('bottomright', legend = c('Successful lunch', 'Unsuccessful lunch', paste('Probability of lunch = ', mean(successful_lunch))), pch = c(1, 1, NA), col = c('green', 'red', NA), cex = 0.8)}
+```
+
+We can verify this answer analytically. $A \sim \text{Unif}(0, 1), B \sim \text{Unif}(0, 1)$, therefore
+\begin{align}
+  P(|A - B| \leq 0.25) &= 1 - P(|A - B| > 0.25) \\
+  &= 1 - 2\cdot \int_0^{0.75}\int_{a+0.25}^{1}f(b)\cdot f(a) \cdot db \cdot da \\
+  &= 1 - 2\cdot \int_0^{0.75}(0.75 - a)\cdot da = 1 - 0.75^2 \\
+  &= \frac{7}{16}
+\end{align}
