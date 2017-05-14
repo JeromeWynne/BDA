@@ -1,0 +1,112 @@
+---
+title: "BDA_019: Markov Chains"
+output: html_notebook
+---
+
+A Markov chain is a sequence of random variables that exhibit one-step dependence. For the sequence of random variables ${X_1, ..., X_n}$ - each of which can take values in the set ${0, 1, ..., M}$ - to be a length-$n$ Markov chain, then
+\[
+  P(X_{n+1} = j | X_n = i_n, ..., X_1 = i_1) = P(X_{n+1} = j | X_n = i_n)
+\]
+must be satisfied. The probability of the next r.v. in the sequence being $j$, given the rest of the sequence, is equal to the probability that next r.v. is $j$ given \emph{only the current state}.
+
+The term on the r.h.s. of this expression is called the transition probability from state $i_n$ to state $j$. To represent all possible transition probabilities for a Markov chain with a state space of size $M$, we use a \emph{transition matrix}:
+\[
+Q = \begin{bmatrix}
+        q_{11} & q_{12}& \dots  & q_{1M} \\
+        \vdots & \vdots & \ddots & \vdots \\
+        x_{M1} & x_{M2}  & \dots  & x_{MM}
+    \end{bmatrix}
+\]
+The $j$th element of the $i$th row corresponds to the probability of transitioning from state $i$ to state $j$. It follows that each row of a valid transition matrix must sum to 1.
+
+With this in mind, we can think about what the probability of moving from state $i$ to state $j$ in more than one step is. We can go via any set of steps, as long as we start at state $i$ and end at $j$. The two-step transition probability from $i$ to $j$ is therefore
+\[
+  q_{ij}^{(2)} = \sum_{k}q_{ik}\cdot q_{kj}
+\]
+By reflecting that:
+\begin{align}
+  QQ &= \begin{bmatrix}
+        q_{11} & q_{12}& \dots  & q_{1M} \\
+        \vdots & \vdots & \ddots & \vdots \\
+        q_{M1} & q_{M2}  & \dots  & q_{MM}
+    \end{bmatrix}
+    \begin{bmatrix}
+        q_{11} & q_{12}& \dots  & q_{1M} \\
+        \vdots & \vdots & \ddots & \vdots \\
+        q_{M1} & q_{M2}  & \dots  & q_{MM}
+    \end{bmatrix} \\ \\
+  &=\begin{bmatrix}
+        \sum_{k=1}^M q_{1k}q_{k1} & \dots \\
+        \vdots & \ddots \\
+    \end{bmatrix} \\
+\end{align}
+It's possible to see that $q_{ij}^{(2)} = Q^2_{ij}$. This is generalizable to find that the $n$-step transition probability between states $i$ and $j$ is
+\[
+  q_{ij}^{(n)} = Q_{ij}^n
+\]
+
+Markov chains can be visualized quite elegantly as a graph, where each node represents a state, and the arrows between nodes indicate possible 1-step transitions and their associated probabilities.
+
+If we encode the initial state probabilities in a vector $t$, such that $t_i = P(X_0 = i)$, then the marginal probabilities of step $n$ are
+\begin{align}
+  P(X_n = j) &= \sum_{i = 1}^M P(X_n = j |X_0 = i)\cdot P(X_0 = i) \\
+  &= \sum_{i = 1}^{M}t_i Q^n_{ij}
+\end{align}
+
+To make this more concrete, let's imagine that I'm choosing what set of clothes I'll wear tomorrow. I only own three sets of clothes, and to begin with I'm equally likely to wear all three. If I were a particular set of clothes on one day, the next day there's a probability of a half I'll wear them again (what? They don't smell, and I didn't spill food on them).
+```{r}
+t <- c(1, 0, 0)
+Q <- matrix(c(0.5, 0.25, 0.25, 0.25, 0.5, 0.25, 0.25, 0.25, 0.5), nrow = 3)
+```
+Using this simple set-up of dependence between what I wear tomorrow and what I'm wearing today, we can evaluate the probability that I'll be wearing the first set of clothes in 2 day's time:
+```{r}
+library(expm)
+seven_day_marginals <- t %*% (Q %^% 2)
+print(seven_day_marginals[1])
+```
+
+The states in a Markov chain can be classified as \emph{recurrent} or \emph{transient} according to whether the chain constantly revisits them or abandons them entirely. More formally, a recurrent state is one where, starting from that state, the probability is 1 that the chain will eventually return to that state. A transient state is defined such that, starting from the state, there is a positive probability that the chain will never return to the state.
+
+A reducible Markov chain permits movement between any two states in a finite number of steps.
+
+To build upon this knowledge of Markov chains, let's think about the length of time it would take to lose all your money by gambling by making $\$$1 bets. The state-space here are numbers in $\{0, ..., N\}$. Let the initial amount of money you have be $j$ dollars, such that
+\[
+  t_i = 0 \ \forall \ i \neq j, 1 \ \text{if} \ i = j
+\]
+The transition matrix here is such that the probability of a win is $p$ and the probability of a loss is $1 - p$. It's only possible to move between adjacent states, therefore the transition matrix is
+```{r}
+tridiag <- function(upper, lower, main){
+    out <- matrix(0, length(main), length(main))
+    diag(out) <- main
+    indx <- seq.int(length(upper))
+    out[cbind(indx+1,indx)] <- lower
+    out[cbind(indx,indx+1)] <- upper
+    return(out)
+}
+
+p <- 0.4
+M <- 10
+upper <- matrix(p, nrow = M - 1, ncol = 1)
+upper[1] <- 0
+lower <- matrix(1 - p - 0.1, nrow = M - 1, ncol = 1)
+lower[M - 1] <- 0
+main  <- matrix(0.1, nrow = M, ncol = 1)
+main[1] <- 1
+main[M] <- 1
+Q <- tridiag(upper, lower, main)
+print(Q)
+```
+We can see that the states of no money and all the money are recurrent, whereas all other states are transient. If I start with 5 dollars then, what is the marginal probability of bankruptcy after each number of bets?
+```{r}
+n_trials <- 100
+t <- c(0, 0, 0, 0, 0, 1, 0, 0, 0, 0)
+prob_bankrupt <- matrix(0, nrow = n_trials, ncol = 1)
+Q_ <- Q
+for (k in seq(n_trials)) {
+  Q_ <- Q_ %*% Q
+  step_marginals <- t %*% Q_
+  prob_bankrupt[k] <- step_marginals[1]
+}
+plot(seq(n_trials), prob_bankrupt, ylim = c(0, 1), pch = 21,
+     xlab = 'Step', ylab = 'Marginal probability of bankruptcy at step')
+```
