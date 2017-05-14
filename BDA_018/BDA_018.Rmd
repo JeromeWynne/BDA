@@ -24,3 +24,18 @@ We can verify this answer analytically. $A \sim \text{Unif}(0, 1), B \sim \text{
   &= 1 - 2\cdot \int_0^{0.75}(0.75 - a)\cdot da = 1 - 0.75^2 \\
   &= \frac{7}{16}
 \end{align}
+
+
+
+Let's bundle in another question. Say I uniformly choose two points on a stick at which to break it. What is the probability that the three segments can be combined to form a triangle?
+
+```{r}
+  X <- runif(n = n_sim)
+  Y <- runif(n = n_sim)
+  form_triangle = matrix(0, nrow = n_sim, ncol = 1)
+  for (ix in seq(n_sim)){
+    form_triangle[ix] <- ((1 - max(X[ix], Y[ix]) < 0.5)&(min(X[ix], Y[ix]) < 0.5)&
+                              (abs(X[ix] - Y[ix]) < 0.5))
+  }
+  plot(X, Y, col = ifelse(form_triangle, 'green', 'red'))
+```
