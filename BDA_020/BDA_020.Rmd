@@ -1,0 +1,38 @@
+---
+title: "BDA_020: Pointers on Joint Distributions"
+output: html_notebook
+---
+
+A joint distribution describes the probability of multiple events occuring. The ones that Blitzstein draws attention to in his book are the multinomial, multivariate Normal, and cauchy distributions.
+
+The multinomial distribution describes the probability of observing $n_j$ of each category in $N$ draws, such that $\sum_{j = 1}^P n_j = N$. 
+
+```{r}
+x <- c(2, 0, 3) # Probability of 2 in first cat., 0 in second, 3 in third
+n <- 5          # Total number of trials
+p <- c(1/3, 1/3, 1/3) # Probability of each category
+
+dmultinom(x, n, p) # Probability density at (2, 0, 3)
+
+rmultinom(1, size = n, prob = p) # A random draw from the Mult(n, p) distribution
+```
+
+To work with the multivariate Normal distribution, we need to use the $\texttt{mvtnorm}$ package. 
+```{r}
+library(mvtnorm)
+library(plot3D)
+mu <- c(0, 0)
+rho <- 0
+covmat <- matrix(c(1, rho, rho, 1), nrow = 2, ncol = 2)
+n_bins = 25
+x <- seq(-3, 3, length.out = n_bins)
+y <- seq(-3, 3, length.out = n_bins)
+r <- matrix(dmvnorm(expand.grid(x, y), mu, covmat), nrow = n_bins)
+ribbon3D(z = r, border=NA, phi = 40, curtain = FALSE, facets = TRUE, col = ramp.col(c("orange", "red")), resfac = 1, colkey = FALSE)
+```
+
+
+All right, that's enough farting around with 3D plots. The cauchy distribution is also available - this isn't a joint distribution in itself, since a Cauchy r.v. $T = \frac{X}{Y}$ where $X, Y \sim N(0, 1)$.
+```{r}
+hist(rcauchy())
+```
