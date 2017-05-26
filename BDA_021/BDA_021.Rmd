@@ -27,34 +27,51 @@ Off-screen, we showed that the posterior is the stationary distribution of a Mar
 
 Kruschke asked us to install BRugs, so we did. He provides a demo model:
 ```{r}
-modelString = "
-library(rbugs)
-model {
-  # Likelihood:
-  for (i in 1:nFlips) {
-    y[i] ~ dbern(theta)
-  }
-  # Prior:
-  theta ~ dbeta(priorA, priorB)
-  priorA <- 1
-  priorB <- 1
-}
-"
-writeLines(modelString, con='model.txt')
-modelCheck('model.txt')
 
+library(rstan) # Load Stan API
+
+fileNameRoot="Stan-BernBeta-Script-"
+
+# Specify model:
+modelString = "
+  data {
+    int<lower=0> N ; # Number of trials
+    int y[N] ;       # Array of trial results
+  }
+  parameters {
+    real<lower=0,upper=1> theta ; # Success probability
+  }
+  model {
+    theta ~ beta(1,1) ;     # Prior
+    y ~ bernoulli(theta) ;  # Likelihood
+  }
+" # close quote for modelString
+
+stanDso <- stan_model( model_code=modelString ) # Constructs a model in Stan, then returns an object to interact with model
+
+# Specify data:
+N = 50 ; z = 10
+y = c(rep(1,z), rep(0,N-z)) # z 1s, N-z 0s
 dataList = list(
-  nFlips = 14,
-  y = c(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0)
+  y = y,
+  N = N 
 )
 
-modelData(bugsData(dataList))
+# Generate posterior sample:
+stanFit <- sampling( object=stanDso , 
+                     data = dataList , 
+                     chains = 3 ,
+                     iter = 1000 , 
+                     warmup = 200 , 
+                     thin = 1 )
 
-modelCompile()
-modelGenInits()
-sampleSet("theta")
-chainlength = 10000
-modelUpdate(chainLength)
-thetaSample = samplesSample("theta")
-thetaSummary = samplesStat("theta")
+traceplot(stanFit, pars=c("theta"))
+plot(stanFit, pars=c("theta"))
+
+{openGraph()
+mcmcCoda = mcmc.list( lapply( 1:ncol(stanFit) , 
+                              function(x) { mcmc(as.array(stanFit)[,x,]) } ) )
+diagMCMC( mcmcCoda , parName=c("theta") )
+saveGraph(file=paste0(fileNameRoot,"Diag"),type="pdf")
+}
 ```
