@@ -1,0 +1,22 @@
+---
+title: "BDA_021: The Metropolis Algorithm"
+output: html_notebook
+---
+
+We have a chain of nodes. Each node has a unique mass. These masses sum to 1. It's possible to move between adjacent nodes. At each step, we flip a coin to determine in which direction to move. Once a direction is chosen, we move to that node with probability $\text{min}(\frac{m_{\text{adj}}\}{m_{\text{current}}}, 1)$. We do this many many times.
+
+```{r, echo = FALSE}
+nodes <- c(0.2, 0.2, 0.2, 0.4)
+current_node <- 2
+n_steps <- 10000
+chain <- matrix(current_node, nrow = n_steps, ncol = 1)
+for (i in seq(2, n_steps)) {
+  proposed_node <- ifelse(((runif(1) > 0.5) & (current_node != 4)) | (current_node == 1),
+                           current_node + 1, current_node - 1)
+  current_node  <- ifelse(rbinom(1, 1, nodes[proposed_node]) == 1, 
+                          proposed_node, current_node)
+  chain[i] <- current_node
+}
+{plot(seq(n_steps), chain, type = 'l', pch = 20, log = 'x')
+lines(seq(n_steps), chain, type = 'p', pch = 20)}
+```
