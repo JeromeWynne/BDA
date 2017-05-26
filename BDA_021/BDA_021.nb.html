@@ -175,13 +175,70 @@ $(document).ready(function () {
 <p>We have a chain of nodes. Each node has a unique mass. These masses sum to 1. It’s possible to move between adjacent nodes. At each step, we flip a coin to determine in which direction to move. Once a direction is chosen, we move to that node with probability <span class="math inline">\(\text{min}(\frac{m_{\text{adj}}\}{m_{\text{current}}}, 1)\)</span>. We do this many many times.</p>
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
-<!-- rnb-output-begin eyJkYXRhIjoiRXJyb3IgaW4gcGxvdC54eSh4eS5jb29yZHMoeCwgeSksIHR5cGUgPSB0eXBlLCAuLi4pIDogXG4gIHBsb3QubmV3IGhhcyBub3QgYmVlbiBjYWxsZWQgeWV0XG4ifQ== -->
-<pre><code>Error in plot.xy(xy.coords(x, y), type = type, ...) : 
-  plot.new has not been called yet</code></pre>
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<p>Off-screen, we showed that the posterior is the stationary distribution of a Markov chain for which the transitions occur according to the Metropolis algorithm.</p>
+<p>Kruschke asked us to install BRugs, so we did. He provides a demo model:</p>
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuaW5zdGFsbC5wYWNrYWdlcygnQlJ1Z3MnKVxuXG5gYGAifQ== -->
+<pre class="r"><code>install.packages('BRugs')
+</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-output-begin eyJkYXRhIjoiSW5zdGFsbGluZyBwYWNrYWdlIGludG8gkUM6L1VzZXJzL2FkbWluL0RvY3VtZW50cy9SL3dpbi1saWJyYXJ5LzMuM5JcbihhcyCRbGlikiBpcyB1bnNwZWNpZmllZClcblBhY2thZ2Ugd2hpY2ggaXMgb25seSBhdmFpbGFibGVcbiAgaW4gc291cmNlIGZvcm0sIGFuZCBtYXkgbmVlZFxuICBjb21waWxhdGlvbiBvZiBDL0MrKy9Gb3J0cmFuOlxuICCRQlJ1Z3OSXG5EbyB5b3Ugd2FudCB0byBhdHRlbXB0IHRvIGluc3RhbGwgdGhlc2UgZnJvbSBzb3VyY2VzP1xuIn0= -->
+<pre><code>Installing package into &lt;U+393C&gt;&lt;U+3E31&gt;C:/Users/admin/Documents/R/win-library/3.3&lt;U+393C&gt;&lt;U+3E32&gt;
+(as &lt;U+393C&gt;&lt;U+3E31&gt;lib&lt;U+393C&gt;&lt;U+3E32&gt; is unspecified)
+Package which is only available
+  in source form, and may need
+  compilation of C/C++/Fortran:
+  &lt;U+393C&gt;&lt;U+3E31&gt;BRugs&lt;U+393C&gt;&lt;U+3E32&gt;
+Do you want to attempt to install these from sources?</code></pre>
+<!-- rnb-output-end -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxueVxuYGBgIn0= -->
+<pre class="r"><code>y</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-output-begin eyJkYXRhIjoiaW5zdGFsbGluZyB0aGUgc291cmNlIHBhY2thZ2Ug46S847ixQlJ1Z3PjpLzjuLJcblxudHJ5aW5nIFVSTCAnaHR0cHM6Ly9jcmFuLnJzdHVkaW8uY29tL3NyYy9jb250cmliL0JSdWdzXzAuOC02LnRhci5neidcbkNvbnRlbnQgdHlwZSAnYXBwbGljYXRpb24veC1nemlwJyBsZW5ndGggOTYxNzUgYnl0ZXMgKDkzIEtCKVxuZG93bmxvYWRlZCA5MyBLQlxuIn0= -->
+<pre><code>installing the source package &lt;U+393C&gt;&lt;U+3E31&gt;BRugs&lt;U+393C&gt;&lt;U+3E32&gt;
+
+trying URL 'https://cran.rstudio.com/src/contrib/BRugs_0.8-6.tar.gz'
+Content type 'application/x-gzip' length 96175 bytes (93 KB)
+downloaded 93 KB</code></pre>
+<!-- rnb-output-end -->
+<!-- rnb-output-begin eyJkYXRhIjoiKiBpbnN0YWxsaW5nICpzb3VyY2UqIHBhY2thZ2UgJ0JSdWdzJyAuLi5cbioqIHBhY2thZ2UgJ0JSdWdzJyBzdWNjZXNzZnVsbHkgdW5wYWNrZWQgYW5kIE1ENSBzdW1zIGNoZWNrZWRcbioqIGxpYnNcbiAgcnVubmluZyAnc3JjL01ha2VmaWxlLndpbicgLi4uXG5ta2RpciAtcCBDOi9Vc2Vycy9hZG1pbi9Eb2N1bWVudHMvUi93aW4tbGlicmFyeS8zLjMvQlJ1Z3MvZXhlY1xuY2MgICAtbTMyIC1XbCwtcnBhdGg9XCJgXCJDOi9QUk9HUkF+MS9SL1ItMzN+MS4zL2Jpbi94NjQvUnNjcmlwdFwiIC1lIFwic291cmNlKCcuLi9SL3dpbmRvd3MvZmluZE9wZW5CVUdTLlInKTtjYXQoZmluZE9wZW5CVUdTKClbWydkaXInXV0pXCJgXCIgQnVnc0hlbHBlci5jIFwiYFwiQzovUFJPR1JBfjEvUi9SLTMzfjEuMy9iaW4veDY0L1JzY3JpcHRcIiAtZSBcInNvdXJjZSgnLi4vUi93aW5kb3dzL2ZpbmRPcGVuQlVHUy5SJyk7Y2F0KGZpbmRPcGVuQlVHUygpW1snZGlyJ11dKVwiYC9saWJPcGVuQlVHUy5kbGxcIiAtbyBDOi9Vc2Vycy9hZG1pbi9Eb2N1bWVudHMvUi93aW4tbGlicmFyeS8zLjMvQlJ1Z3MvZXhlYy9CdWdzSGVscGVyXG5XYXJuaW5nIG1lc3NhZ2U6XG5JbiBmaW5kT3BlbkJVR1MoKSA6IE9wZW5CVUdTIDMuMi4yIG9yIGdyZWF0ZXIgbXVzdCBiZSBpbnN0YWxsZWRcbihpZiBzbywgdGhpcyBpbmRpY2F0ZXMgbWlzc2luZyByZWdpc3RyeSBrZXlzIG9mIE9wZW5CVUdTKS5cblNldHRpbmcgdGhlIGVudmlyb25tZW50IHZhcmlhYmxlICdPcGVuQlVHU19QQVRIJyBpbiBhZHZhbmNlIG9mIGxvYWRpbmcgJ0JSdWdzJyBvdmVyd3JpdGVzIHRoZSBwYXRoLlxuU2VlID9sb2FkT3BlbkJVR1MgaW4gb3JkZXIgdG8gbG9hZCBPcGVuQlVHUyBtYW51YWxseS5cbldhcm5pbmcgbWVzc2FnZTpcbkluIGZpbmRPcGVuQlVHUygpIDogT3BlbkJVR1MgMy4yLjIgb3IgZ3JlYXRlciBtdXN0IGJlIGluc3RhbGxlZFxuKGlmIHNvLCB0aGlzIGluZGljYXRlcyBtaXNzaW5nIHJlZ2lzdHJ5IGtleXMgb2YgT3BlbkJVR1MpLlxuU2V0dGluZyB0aGUgZW52aXJvbm1lbnQgdmFyaWFibGUgJ09wZW5CVUdTX1BBVEgnIGluIGFkdmFuY2Ugb2YgbG9hZGluZyAnQlJ1Z3MnIG92ZXJ3cml0ZXMgdGhlIHBhdGguXG5TZWUgP2xvYWRPcGVuQlVHUyBpbiBvcmRlciB0byBsb2FkIE9wZW5CVUdTIG1hbnVhbGx5LlxuL3Vzci9iaW4vc2g6IGNjOiBjb21tYW5kIG5vdCBmb3VuZFxubWFrZTogKioqIFtCdWdzSGVscGVyXSBFcnJvciAxMjdcbldhcm5pbmc6IHJ1bm5pbmcgY29tbWFuZCAnbWFrZSAtLW5vLXByaW50LWRpcmVjdG9yeSAtZiBcIk1ha2VmaWxlLndpblwiJyBoYWQgc3RhdHVzIDJcbkVSUk9SOiBjb21waWxhdGlvbiBmYWlsZWQgZm9yIHBhY2thZ2UgJ0JSdWdzJ1xuKiByZW1vdmluZyAnQzovVXNlcnMvYWRtaW4vRG9jdW1lbnRzL1Ivd2luLWxpYnJhcnkvMy4zL0JSdWdzJ1xuV2FybmluZyBpbiBpbnN0YWxsLnBhY2thZ2VzIDpcbiAgcnVubmluZyBjb21tYW5kICdcIkM6L1BST0dSQX4xL1IvUi0zM34xLjMvYmluL3g2NC9SXCIgQ01EIElOU1RBTEwgLWwgXCJDOlxcVXNlcnNcXGFkbWluXFxEb2N1bWVudHNcXFJcXHdpbi1saWJyYXJ5XFwzLjNcIiBDOlxcVXNlcnNcXGFkbWluXFxBcHBEYXRhXFxMb2NhbFxcVGVtcFxcUnRtcDZKaTRabi9kb3dubG9hZGVkX3BhY2thZ2VzL0JSdWdzXzAuOC02LnRhci5neicgaGFkIHN0YXR1cyAxXG5XYXJuaW5nIGluIGluc3RhbGwucGFja2FnZXMgOlxuICBpbnN0YWxsYXRpb24gb2YgcGFja2FnZSDigJhCUnVnc+KAmSBoYWQgbm9uLXplcm8gZXhpdCBzdGF0dXNcbiJ9 -->
+<pre><code>* installing *source* package 'BRugs' ...
+** package 'BRugs' successfully unpacked and MD5 sums checked
+** libs
+  running 'src/Makefile.win' ...
+mkdir -p C:/Users/admin/Documents/R/win-library/3.3/BRugs/exec
+cc   -m32 -Wl,-rpath=&quot;`&quot;C:/PROGRA~1/R/R-33~1.3/bin/x64/Rscript&quot; -e &quot;source('../R/windows/findOpenBUGS.R');cat(findOpenBUGS()[['dir']])&quot;`&quot; BugsHelper.c &quot;`&quot;C:/PROGRA~1/R/R-33~1.3/bin/x64/Rscript&quot; -e &quot;source('../R/windows/findOpenBUGS.R');cat(findOpenBUGS()[['dir']])&quot;`/libOpenBUGS.dll&quot; -o C:/Users/admin/Documents/R/win-library/3.3/BRugs/exec/BugsHelper
+Warning message:
+In findOpenBUGS() : OpenBUGS 3.2.2 or greater must be installed
+(if so, this indicates missing registry keys of OpenBUGS).
+Setting the environment variable 'OpenBUGS_PATH' in advance of loading 'BRugs' overwrites the path.
+See ?loadOpenBUGS in order to load OpenBUGS manually.
+Warning message:
+In findOpenBUGS() : OpenBUGS 3.2.2 or greater must be installed
+(if so, this indicates missing registry keys of OpenBUGS).
+Setting the environment variable 'OpenBUGS_PATH' in advance of loading 'BRugs' overwrites the path.
+See ?loadOpenBUGS in order to load OpenBUGS manually.
+/usr/bin/sh: cc: command not found
+make: *** [BugsHelper] Error 127
+Warning: running command 'make --no-print-directory -f &quot;Makefile.win&quot;' had status 2
+ERROR: compilation failed for package 'BRugs'
+* removing 'C:/Users/admin/Documents/R/win-library/3.3/BRugs'
+Warning in install.packages :
+  running command '&quot;C:/PROGRA~1/R/R-33~1.3/bin/x64/R&quot; CMD INSTALL -l &quot;C:\Users\admin\Documents\R\win-library\3.3&quot; C:\Users\admin\AppData\Local\Temp\Rtmp6Ji4Zn/downloaded_packages/BRugs_0.8-6.tar.gz' had status 1
+Warning in install.packages :
+  installation of package ‘BRugs’ had non-zero exit status</code></pre>
+<!-- rnb-output-end -->
+<!-- rnb-output-begin eyJkYXRhIjoiXG5UaGUgZG93bmxvYWRlZCBzb3VyY2UgcGFja2FnZXMgYXJlIGluXG5cdOKAmEM6XFxVc2Vyc1xcYWRtaW5cXEFwcERhdGFcXExvY2FsXFxUZW1wXFxSdG1wNkppNFpuXFxkb3dubG9hZGVkX3BhY2thZ2Vz4oCZXG4ifQ== -->
+<pre><code>
+The downloaded source packages are in
+    ‘C:\Users\admin\AppData\Local\Temp\Rtmp6Ji4Zn\downloaded_packages’</code></pre>
 <!-- rnb-output-end -->
 <!-- rnb-chunk-end -->
 
-<div id="rmd-source-code">LS0tDQp0aXRsZTogIkJEQV8wMjE6IFRoZSBNZXRyb3BvbGlzIEFsZ29yaXRobSINCm91dHB1dDogaHRtbF9ub3RlYm9vaw0KLS0tDQoNCldlIGhhdmUgYSBjaGFpbiBvZiBub2Rlcy4gRWFjaCBub2RlIGhhcyBhIHVuaXF1ZSBtYXNzLiBUaGVzZSBtYXNzZXMgc3VtIHRvIDEuIEl0J3MgcG9zc2libGUgdG8gbW92ZSBiZXR3ZWVuIGFkamFjZW50IG5vZGVzLiBBdCBlYWNoIHN0ZXAsIHdlIGZsaXAgYSBjb2luIHRvIGRldGVybWluZSBpbiB3aGljaCBkaXJlY3Rpb24gdG8gbW92ZS4gT25jZSBhIGRpcmVjdGlvbiBpcyBjaG9zZW4sIHdlIG1vdmUgdG8gdGhhdCBub2RlIHdpdGggcHJvYmFiaWxpdHkgJFx0ZXh0e21pbn0oXGZyYWN7bV97XHRleHR7YWRqfX1cfXttX3tcdGV4dHtjdXJyZW50fX19LCAxKSQuIFdlIGRvIHRoaXMgbWFueSBtYW55IHRpbWVzLg0KDQpgYGB7ciwgZWNobyA9IEZBTFNFfQ0Kbm9kZXMgPC0gYygwLjIsIDAuMiwgMC4yLCAwLjQpDQpjdXJyZW50X25vZGUgPC0gMg0Kbl9zdGVwcyA8LSAxMDAwMA0KY2hhaW4gPC0gbWF0cml4KGN1cnJlbnRfbm9kZSwgbnJvdyA9IG5fc3RlcHMsIG5jb2wgPSAxKQ0KZm9yIChpIGluIHNlcSgyLCBuX3N0ZXBzKSkgew0KICBwcm9wb3NlZF9ub2RlIDwtIGlmZWxzZSgoKHJ1bmlmKDEpID4gMC41KSAmIChjdXJyZW50X25vZGUgIT0gNCkpIHwgKGN1cnJlbnRfbm9kZSA9PSAxKSwNCiAgICAgICAgICAgICAgICAgICAgICAgICAgIGN1cnJlbnRfbm9kZSArIDEsIGN1cnJlbnRfbm9kZSAtIDEpDQogIGN1cnJlbnRfbm9kZSAgPC0gaWZlbHNlKHJiaW5vbSgxLCAxLCBub2Rlc1twcm9wb3NlZF9ub2RlXSkgPT0gMSwgDQogICAgICAgICAgICAgICAgICAgICAgICAgIHByb3Bvc2VkX25vZGUsIGN1cnJlbnRfbm9kZSkNCiAgY2hhaW5baV0gPC0gY3VycmVudF9ub2RlDQp9DQp7cGxvdChzZXEobl9zdGVwcyksIGNoYWluLCB0eXBlID0gJ2wnLCBwY2ggPSAyMCwgbG9nID0gJ3gnKQ0KbGluZXMoc2VxKG5fc3RlcHMpLCBjaGFpbiwgdHlwZSA9ICdwJywgcGNoID0gMjApfQ0KYGBg</div>
+<div id="rmd-source-code">LS0tDQp0aXRsZTogIkJEQV8wMjE6IFRoZSBNZXRyb3BvbGlzIEFsZ29yaXRobSINCm91dHB1dDogaHRtbF9ub3RlYm9vaw0KLS0tDQoNCldlIGhhdmUgYSBjaGFpbiBvZiBub2Rlcy4gRWFjaCBub2RlIGhhcyBhIHVuaXF1ZSBtYXNzLiBUaGVzZSBtYXNzZXMgc3VtIHRvIDEuIEl0J3MgcG9zc2libGUgdG8gbW92ZSBiZXR3ZWVuIGFkamFjZW50IG5vZGVzLiBBdCBlYWNoIHN0ZXAsIHdlIGZsaXAgYSBjb2luIHRvIGRldGVybWluZSBpbiB3aGljaCBkaXJlY3Rpb24gdG8gbW92ZS4gT25jZSBhIGRpcmVjdGlvbiBpcyBjaG9zZW4sIHdlIG1vdmUgdG8gdGhhdCBub2RlIHdpdGggcHJvYmFiaWxpdHkgJFx0ZXh0e21pbn0oXGZyYWN7bV97XHRleHR7YWRqfX1cfXttX3tcdGV4dHtjdXJyZW50fX19LCAxKSQuIFdlIGRvIHRoaXMgbWFueSBtYW55IHRpbWVzLg0KDQpgYGB7ciwgZWNobyA9IEZBTFNFfQ0Kbm9kZXMgPC0gYygwLjEsIDAuMSwgMC4xLCAwLjcpDQpjdXJyZW50X25vZGUgPC0gMg0Kbl9zdGVwcyA8LSAxMDAwMA0KY2hhaW4gPC0gbWF0cml4KGN1cnJlbnRfbm9kZSwgbnJvdyA9IG5fc3RlcHMsIG5jb2wgPSAxKQ0KZm9yIChpIGluIHNlcSgyLCBuX3N0ZXBzKSkgew0KICBwcm9wb3NlZF9ub2RlIDwtIGlmZWxzZSgocnVuaWYoMSkgPiAwLjUpLA0KICAgICAgICAgICAgICAgICAgICAgICAgICAgY3VycmVudF9ub2RlICsgMSwgY3VycmVudF9ub2RlIC0gMSkNCiAgcHJvcG9zZWRfbm9kZSA8LSBpZmVsc2UocHJvcG9zZWRfbm9kZSA9PSA1LCAxLCBwcm9wb3NlZF9ub2RlKQ0KICBwcm9wb3NlZF9ub2RlIDwtIGlmZWxzZShwcm9wb3NlZF9ub2RlID09IDAsIDQsIHByb3Bvc2VkX25vZGUpDQogIGN1cnJlbnRfbm9kZSAgPC0gaWZlbHNlKHJiaW5vbSgxLCAxLCBub2Rlc1twcm9wb3NlZF9ub2RlXSkgPT0gMSwgDQogICAgICAgICAgICAgICAgICAgICAgICAgIHByb3Bvc2VkX25vZGUsIGN1cnJlbnRfbm9kZSkNCiAgY2hhaW5baV0gPC0gY3VycmVudF9ub2RlDQp9DQp7cGxvdChzZXEobl9zdGVwcyksIGNoYWluLCB0eXBlID0gJ2wnLCBwY2ggPSAyMCwgbG9nID0gJ3gnKQ0KbGluZXMoc2VxKG5fc3RlcHMpLCBjaGFpbiwgdHlwZSA9ICdwJywgcGNoID0gMjApfQ0KYGBgDQoNCk9mZi1zY3JlZW4sIHdlIHNob3dlZCB0aGF0IHRoZSBwb3N0ZXJpb3IgaXMgdGhlIHN0YXRpb25hcnkgZGlzdHJpYnV0aW9uIG9mIGEgTWFya292IGNoYWluIGZvciB3aGljaCB0aGUgdHJhbnNpdGlvbnMgb2NjdXIgYWNjb3JkaW5nIHRvIHRoZSBNZXRyb3BvbGlzIGFsZ29yaXRobS4NCg0KS3J1c2Noa2UgYXNrZWQgdXMgdG8gaW5zdGFsbCBCUnVncywgc28gd2UgZGlkLiBIZSBwcm92aWRlcyBhIGRlbW8gbW9kZWw6DQpgYGB7cn0NCm1vZGVsIHsNCiAgDQogIA0KfQ0KYGBg</div>
 
 
 

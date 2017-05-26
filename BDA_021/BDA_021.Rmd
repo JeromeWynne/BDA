@@ -6,17 +6,55 @@ output: html_notebook
 We have a chain of nodes. Each node has a unique mass. These masses sum to 1. It's possible to move between adjacent nodes. At each step, we flip a coin to determine in which direction to move. Once a direction is chosen, we move to that node with probability $\text{min}(\frac{m_{\text{adj}}\}{m_{\text{current}}}, 1)$. We do this many many times.
 
 ```{r, echo = FALSE}
-nodes <- c(0.2, 0.2, 0.2, 0.4)
+nodes <- c(0.1, 0.1, 0.1, 0.7)
 current_node <- 2
 n_steps <- 10000
 chain <- matrix(current_node, nrow = n_steps, ncol = 1)
 for (i in seq(2, n_steps)) {
-  proposed_node <- ifelse(((runif(1) > 0.5) & (current_node != 4)) | (current_node == 1),
+  proposed_node <- ifelse((runif(1) > 0.5),
                            current_node + 1, current_node - 1)
+  proposed_node <- ifelse(proposed_node == 5, 1, proposed_node)
+  proposed_node <- ifelse(proposed_node == 0, 4, proposed_node)
   current_node  <- ifelse(rbinom(1, 1, nodes[proposed_node]) == 1, 
                           proposed_node, current_node)
   chain[i] <- current_node
 }
 {plot(seq(n_steps), chain, type = 'l', pch = 20, log = 'x')
 lines(seq(n_steps), chain, type = 'p', pch = 20)}
+```
+
+Off-screen, we showed that the posterior is the stationary distribution of a Markov chain for which the transitions occur according to the Metropolis algorithm.
+
+Kruschke asked us to install BRugs, so we did. He provides a demo model:
+```{r}
+modelString = "
+library(rbugs)
+model {
+  # Likelihood:
+  for (i in 1:nFlips) {
+    y[i] ~ dbern(theta)
+  }
+  # Prior:
+  theta ~ dbeta(priorA, priorB)
+  priorA <- 1
+  priorB <- 1
+}
+"
+writeLines(modelString, con='model.txt')
+modelCheck('model.txt')
+
+dataList = list(
+  nFlips = 14,
+  y = c(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0)
+)
+
+modelData(bugsData(dataList))
+
+modelCompile()
+modelGenInits()
+sampleSet("theta")
+chainlength = 10000
+modelUpdate(chainLength)
+thetaSample = samplesSample("theta")
+thetaSummary = samplesStat("theta")
 ```
