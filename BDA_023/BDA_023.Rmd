@@ -1,0 +1,26 @@
+---
+title: " BDA_023: Multiple linear regression like an adult"
+output: pdf
+---
+
+We're going to:
+
+1. Perform a multiple linear fit to some data according to least squares, pointing out the assumptions made in such a fit as we do so.
+2. Estimate the common variance,
+3. Use the estimated common variance to compute the standard errors for each coefficient, and plot these against the estimated coefficients.
+4. Evaluate the F-statistic for all coefficients in the model.
+
+The dataset we'll use to do this is from a study examining the correlation between the level of prostate-specific antigen and several clinical measurements in men who were about to have their prostates removed.
+
+```{r, echo = FALSE}
+data <- read.table(file = 'prostate.tsv')
+data <- data[ , c(1, 2, 9)] # Keep lcavol, lweight, lpsa
+```
+We scale and center all variables, so that it's possible to directly compare effect sizes.
+```{r, echo = FALSE}
+data <- data.frame(apply(data, 2, FUN = function(col) (col - mean(col))/sqrt(var(col))))
+print(apply(data, 2, function(col) var(col))) # Check the variances are all 1
+```
+Next we fit a linear model. We're going to do this ''by hand'' to make it really clear what's going on. Of course, R has built in functions to fit linear models and assess the sampling properties of their coefficients. Here though, we're going to set up the design matrix $\mathbf{X}$ and the response vector $\mathbf{y}$, then estimate the coefficients using the normal equations. 
+
+The least-squares fit will be the best linear unbiased estimator, assuming that the relationship between the response and inputs is indeed linear, that the responses are conditionally independent on the inputs, and that the two predictors aren't collinear. What this means is that it will, on average, provide the most accurate estimate of the coefficients $\beta$ such that $E[y|\mathbf{X}] = \mathbf{X}\beta$, given that $E[\hat{\beta}] = \beta$.
