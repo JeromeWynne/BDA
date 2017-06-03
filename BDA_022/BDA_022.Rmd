@@ -1,0 +1,4 @@
+---
+title: "BDA_022: Multiparameter Normal Model"
+output: html_notebook
+---
