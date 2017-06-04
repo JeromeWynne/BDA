@@ -1,6 +1,6 @@
 ---
-title: " BDA_023: Multiple linear regression like an adult"
-output: pdf
+title: "BDA 23: Multiple linear regression"
+output: pdf_document
 ---
 
 We're going to:
@@ -12,15 +12,91 @@ We're going to:
 
 The dataset we'll use to do this is from a study examining the correlation between the level of prostate-specific antigen and several clinical measurements in men who were about to have their prostates removed.
 
-```{r, echo = FALSE}
+```{r, echo = TRUE}
 data <- read.table(file = 'prostate.tsv')
 data <- data[ , c(1, 2, 9)] # Keep lcavol, lweight, lpsa
 ```
 We scale and center all variables, so that it's possible to directly compare effect sizes.
-```{r, echo = FALSE}
-data <- data.frame(apply(data, 2, FUN = function(col) (col - mean(col))/sqrt(var(col))))
+```{r, echo = TRUE}
+unscaled_data <- data
+data       <- data.frame(apply(data, 2, FUN = function(col) (col - mean(col))/sqrt(var(col))))
 print(apply(data, 2, function(col) var(col))) # Check the variances are all 1
 ```
-Next we fit a linear model. We're going to do this ''by hand'' to make it really clear what's going on. Of course, R has built in functions to fit linear models and assess the sampling properties of their coefficients. Here though, we're going to set up the design matrix $\mathbf{X}$ and the response vector $\mathbf{y}$, then estimate the coefficients using the normal equations. 
+Next we fit a linear model. We're going to do this "by hand" to make it really clear what's going on. Of course, R has built-in functions to fit linear models and assess the sampling properties of their coefficients. Here though, we're going to set up the design matrix $\mathbf{X}$ and the response vector $\mathbf{y}$, then estimate the coefficients using the normal equation:
+\begin{equation}
+  \hat{\beta} = (\mathbf{X^T X})^{-1}\mathbf{X^T y}
+\end{equation}
+This is the best linear unbiased estimator under the assumptions that:
 
-The least-squares fit will be the best linear unbiased estimator, assuming that the relationship between the response and inputs is indeed linear, that the responses are conditionally independent on the inputs, and that the two predictors aren't collinear. What this means is that it will, on average, provide the most accurate estimate of the coefficients $\beta$ such that $E[y|\mathbf{X}] = \mathbf{X}\beta$, given that $E[\hat{\beta}] = \beta$.
+- the relationship between the response and inputs is indeed linear, $E[y|\mathbf{X}] = \mathbf{X}\beta$,
+- the responses are independent conditional on the inputs (i.e. values drawn for the same input are independent - there is no systematic deviation in the response produced),
+- and the two predictors aren't collinear (this is necessary to...).
+
+What this means is that least-squares will, on average, provide the most accurate estimate of the coefficients $\beta$ such that $E[y|\mathbf{X}] = \mathbf{X}\beta$, given that $E[\hat{\beta}] = \beta$.
+
+All right, enough waffle: let's calculate the coefficients and plot the resulting plane:
+```{r, echo = TRUE}
+library(MASS)
+library(scatterplot3d)
+X <- as.matrix(cbind(matrix(1, nrow = dim(data)[1], ncol = 1), data[ , -3]))
+y <- as.matrix(data[ , 3])
+N <- dim(X)[1]
+p <- dim(X)[2] - 1
+beta_hat <- ginv(t(X) %*% X) %*% t(X) %*% y
+```
+```{r, echo = FALSE}
+{s <- scatterplot3d(x = X[ , 2], y = X[ , 3], z = y, highlight.3d = TRUE, pch = 16, angle = 40,
+              xlab = colnames(data)[1], ylab = colnames(data)[2], zlab = colnames(data)[3])
+s$plane3d(Intercept = beta_hat[1], x.coef = beta_hat[2], y.coef = beta_hat[3],
+          draw_polygon = TRUE)}
+```
+
+This plot suggests that the log of prostate-specific antigen increases with the log of prostate volume and the log of prostate density. The increase with density is minor however, so we'll need to look at the amount of uncertainty in the coefficient estimates.
+
+If we assume the variance of the errors, $\sigma^2$, is constant across all responses, then the variance of the coefficient estimates will be:
+\begin{equation}
+  \text{Var}(\hat{\beta}) = (\mathbf{X^T X})^{-1}\sigma^2
+\end{equation}
+In reality the common variance won't be known, so it needs to be estimated. Since we're estimating the expected response in $p + 1$ dimensions, the unbiased estimate of the response's variance is:
+\begin{equation}
+  \hat{\sigma}^2 = \frac{(\mathbf{y} - E\mathbf{y|X})^T(\mathbf{y} - E\mathbf{y|X})}{N - p - 1}
+\end{equation}
+where there are $N$ observations and $p$ non-constant inputs.
+
+If we now assume that the errors in the response are Gaussian, then it follows that the distribution of the coefficient estimates will also be Gaussian:
+\begin{equation}
+  \hat{\beta} \sim \text{N}(\beta, (\mathbf{X^T X})^{-1} \sigma^2)
+\end{equation}
+The standard error on these estimates is estimated by taking the square root of the coefficient's sample variance:
+\begin{equation}
+  \text{SE}(\hat{\beta}) = (\text{diag}((\mathbf{X^T X})^{-1})\hat{\sigma}^2)^{\circ \frac{1}{2}}
+\end{equation}
+The normality assumption means that these standard errors can be used to run $t$-tests. We have about 100 samples in this dataset and only three features, which means that the normal approximation to to the $t$-distribution is pretty good.
+
+The one-sided 99$\%$ confidence limit is
+```{r, echo = TRUE}
+n_se <- qnorm(0.99)
+print(n_se)
+```
+standard errors from zero. Our acceptance criteria for the effects to be non-zero then, is that the coefficients are at least 2.33 standard errors from zero.
+```{r, echo = TRUE}
+var_hat <- sum(sapply(y, function(t) (t - mean(y))^2))/(N - p - 1)
+se <- sqrt(diag(ginv(t(X) %*% X))*var_hat)
+z <- beta_hat/(n_se*se)
+```
+```{r, echo = FALSE}
+{barplot(t(beta_hat), names.arg = c('Mean response', 'log(Cancer vol.)', 'log(Cancer weight)'))
+abline(h = n_se*se[2], lty = 2, col = 'cornflowerblue', lwd = 2)
+}
+```
+We can see that the size of the cancer influences the amount of antigen it produces. Its density is also quite likely to have an effect, however more data would be needed to verify this. By rescaling the coefficients we can see the rate of increase of $\log(\texttt{psa})$ with $\log(\texttt{cavol})$.
+
+```{r, echo = FALSE}
+  input_var  <- apply(unscaled_data, 2, function(col )(sqrt(var(col))))
+  effect <- beta_hat[2]*sqrt(input_var[3]/input_var[2])
+
+  {plot(data$lcavol - mean(data$lcavol), data$lpsa - mean(data$lpsa),
+        xlab = 'log(Cancer volume)', ylab = 'log(Prostate-specific antigen volume)',
+        pch = 20, col = 'cornflowerblue', bg = 'white')
+  abline(0, effect, lwd = 1.3)}
+```
